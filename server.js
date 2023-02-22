@@ -1,29 +1,54 @@
 const express = require("express");
-const path = require("path");
 const http = require("http");
+const path = require("path");
 const app = express();
 const server = http.createServer(app);
-
 const io = require("socket.io")(server);
 
-//Detect client connection
-io.on("connection", (socket) => {
-  //Send message to connected client
-  socket.emit("message", "Welcome to ChatCord");
-  //send message to all connected clients except the this client
-  socket.broadcast.emit("message", "A User Joined");
-  //send message on client disconnection
-  socket.on("disconnect", () => {
-    io.emit("message", "A user has disconnected");
-  });
-  //catch the emitted chat message from client
-  socket.on("chatMessage", (message) => {
-    io.emit("message", message);
-  });
-});
+//Import Utils
+const {
+  getCurrentUser,
+  joinUsers,
+  userLeave,
+  getRoomUsers,
+} = require("./utils/users");
+const formatMessages = require("./utils/messages");
+
+const botName = "ChatBot";
+
+const PORT = process.env.PORT || 3001;
 
 app.use(express.static(path.join(__dirname, "public")));
 
-const PORT = 3000 || process.env.PORT;
+io.on("connection", (socket) => {
+  //On join room
+  socket.on("joinRoom", ({ username, room }) => {
+    const user = joinUsers(socket.id, username, room);
+    socket.join(user.room);
 
-server.listen(PORT, () => console.log(`Server running at ${PORT}`));
+    //sent notification to this client
+    socket.emit("message", formatMessages(botName, "Welcome To ChatCord"));
+    //sent notification to other clients except this one
+    socket.broadcast
+      .to(user.room)
+      .emit("message", formatMessages(botName, `${user.username} has Joined`));
+  });
+  //get chat message from client and emit to self and others
+  socket.on("chatMessage", (message) => {
+    const user = getCurrentUser(socket.id);
+    console.log(user);
+    io.to(user.room).emit("message", formatMessages(user.username, message));
+  });
+  //send noti to other clietns if this clietn disconnects
+  socket.on("disconnect", () => {
+    const user = userLeave(socket.id);
+    if (user) {
+      io.to(user[0].room).emit(
+        "message",
+        formatMessages(botName, `${user[0].username} has disconnected`)
+      );
+    }
+  });
+});
+
+server.listen(PORT, () => console.log(`The server is running at ${PORT}`));
