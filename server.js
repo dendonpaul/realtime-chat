@@ -17,29 +17,39 @@ const formatMessages = require("./utils/messages");
 const botName = "ChatBot";
 
 const PORT = process.env.PORT || 3001;
+const roomCapacity = 2;
 
 app.use(express.static(path.join(__dirname, "public")));
 
 io.on("connection", (socket) => {
   //On join room
   socket.on("joinRoom", ({ username, room }) => {
-    const user = joinUsers(socket.id, username, room);
-    socket.join(user.room);
+    console.log(getRoomUsers(room));
+    if (getRoomUsers(room).length <= roomCapacity) {
+      const user = joinUsers(socket.id, username, room);
+      socket.join(user.room);
 
-    //sent notification to this client
-    socket.emit("message", formatMessages(botName, "Welcome To ChatCord"));
-    //sent notification to other clients except this one
-    socket.broadcast
-      .to(user.room)
-      .emit("message", formatMessages(botName, `${user.username} has Joined`));
+      //sent notification to this client
+      socket.emit("message", formatMessages(botName, "Welcome To ChatCord"));
+      //sent notification to other clients except this one
+      socket.broadcast
+        .to(user.room)
+        .emit(
+          "message",
+          formatMessages(botName, `${user.username} has Joined`)
+        );
 
-    //send list of users available in the room while connecting
-    io.to(user.room).emit("user-list", getRoomUsers(user.room));
+      //send list of users available in the room while connecting
+      io.to(user.room).emit("user-list", getRoomUsers(user.room));
+    } else {
+      socket.emit("roomFull", "room full");
+      socket.disconnect();
+      return;
+    }
   });
   //get chat message from client and emit to self and others
   socket.on("chatMessage", (message) => {
     const user = getCurrentUser(socket.id);
-    console.log(user);
     io.to(user.room).emit("message", formatMessages(user.username, message));
   });
   //send noti to other clietns if this clietn disconnects

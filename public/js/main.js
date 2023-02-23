@@ -35,6 +35,15 @@ socket.on("user-list", (users) => {
   });
 });
 
+//room full
+socket.on("roomFull", (message) => {
+  outputMessage({
+    username: "ChatBot",
+    text: "Sorry Room is full. Try waiting or join different room",
+    time: "now",
+  });
+});
+
 //Output Message Function
 const outputMessage = (message) => {
   const div = document.createElement("div");
