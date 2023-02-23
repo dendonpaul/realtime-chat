@@ -1,5 +1,6 @@
 const chatForm = document.getElementById("chat-form");
 const chatMessages = document.querySelector(".chat-messages");
+const roomName = document.getElementById("room-name");
 
 const url = new URL(window.location);
 const searchParams = url.searchParams;
@@ -21,6 +22,9 @@ chatForm.addEventListener("submit", (e) => {
   e.target.msg.value = "";
   e.target.msg.focus;
 });
+
+//Update room name for client
+roomName.textContent = room;
 
 //Output Message Function
 const outputMessage = (message) => {
