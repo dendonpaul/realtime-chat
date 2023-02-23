@@ -1,6 +1,7 @@
 const chatForm = document.getElementById("chat-form");
 const chatMessages = document.querySelector(".chat-messages");
 const roomName = document.getElementById("room-name");
+const usersList = document.getElementById("users");
 
 const url = new URL(window.location);
 const searchParams = url.searchParams;
@@ -28,8 +29,9 @@ roomName.textContent = room;
 
 //get all users list from server
 socket.on("user-list", (users) => {
+  usersList.innerHTML = "";
   users.forEach((user) => {
-    document.getElementById("users").innerHTML += `<li>${user.username}</li>`;
+    usersList.innerHTML += `<li>${user.username}</li>`;
   });
 });
 

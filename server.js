@@ -33,9 +33,8 @@ io.on("connection", (socket) => {
       .to(user.room)
       .emit("message", formatMessages(botName, `${user.username} has Joined`));
 
-    //send list of users available in the room
-    const usersList = getRoomUsers(user.room);
-    io.to(user.room).emit("user-list", usersList);
+    //send list of users available in the room while connecting
+    io.to(user.room).emit("user-list", getRoomUsers(user.room));
   });
   //get chat message from client and emit to self and others
   socket.on("chatMessage", (message) => {
@@ -51,6 +50,8 @@ io.on("connection", (socket) => {
         "message",
         formatMessages(botName, `${user[0].username} has disconnected`)
       );
+      //send list of users available in the room while dis-connecting
+      io.to(user[0].room).emit("user-list", getRoomUsers(user[0].room));
     }
   });
 });
