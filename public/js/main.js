@@ -26,6 +26,13 @@ chatForm.addEventListener("submit", (e) => {
 //Update room name for client
 roomName.textContent = room;
 
+//get all users list from server
+socket.on("user-list", (users) => {
+  users.forEach((user) => {
+    document.getElementById("users").innerHTML += `<li>${user.username}</li>`;
+  });
+});
+
 //Output Message Function
 const outputMessage = (message) => {
   const div = document.createElement("div");

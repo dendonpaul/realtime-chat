@@ -34,6 +34,8 @@ io.on("connection", (socket) => {
       .emit("message", formatMessages(botName, `${user.username} has Joined`));
 
     //send list of users available in the room
+    const usersList = getRoomUsers(user.room);
+    io.to(user.room).emit("user-list", usersList);
   });
   //get chat message from client and emit to self and others
   socket.on("chatMessage", (message) => {
